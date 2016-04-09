@@ -37,7 +37,11 @@ def fetchFeeds(feed):
                                 doc['feed_title'] = d.feed.title
                                 doc['feed_link_official'] = d.feed.link
                                 doc['feed_link_used'] = url
-                                doc['feed_published'] = datetime.fromtimestamp(mktime(d.feed.published_parsed))
+                                try:
+                                        doc['feed_published'] = datetime.fromtimestamp(mktime(d.feed.published_parsed))
+                                except:
+                                        print url
+                                        doc['feed_published'] = ''
 
                                 for entry in d.entries:
                                         try:
