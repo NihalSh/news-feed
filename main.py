@@ -40,25 +40,43 @@ def fetchFeeds(feed):
                                 doc['feed_published'] = datetime.fromtimestamp(mktime(d.feed.published_parsed))
 
                                 for entry in d.entries:
-                                        doc['title'] = entry.title
-                                        doc['id'] = entry.id
-                                        doc['link'] = entry.link
-                                        doc['published'] = datetime.fromtimestamp(mktime(entry.published_parsed))
-                                        doc['description'] = entry.description
-                                """add database functionality here"""
-                                print doc
-                                break
+                                        try:
+                                                doc['title'] = entry.title
+                                                doc['id'] = entry.id
+                                                doc['link'] = entry.link
+                                                doc['published'] = datetime.fromtimestamp(mktime(entry.published_parsed))
+                                                doc['description'] = entry.description
+                                                """add database functionality here"""
+                                        except:
+                                                print "entry faulty: not added to database"
+                                        else:
+                                                if addToDatabase(doc.copy()) == True:
+                                                        print "Entry added to or already present in DB"
+                                                else:
+                                                        print "Database error!"
+                                                
 
-client = MongoClient("192.168.101.5", 27017)
-db = client['news_feed']
+def addToDatabase(doc):
+        try:
+                client = MongoClient("192.168.101.5", 27017)
+                db = client['news_feed']
+                collection = db['master']
+                assert type(doc) is dict, "Invalid Argument: dict expected!"
+                if collection.find_one({'id': doc['id']}) is None:
+                        result = collection.insert_one(doc)
+                        print result.inserted_id
+                        return result.acknowledged
+                else:
+                        print "skipped"
+                        return True
+        except:
+                return False
 
 """
 The
 DB --> master --> {'source': , 'feed_title':, 'feed_link_official': , 'feed_link_used', 'feed_published':,
 'id':, 'title':, 'link':, 'published':, 'description':}
 """
-
-
 
 feed = loadLinks(feedJson)
 fetchFeeds(feed)
